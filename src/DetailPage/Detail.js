@@ -19,7 +19,7 @@ const Detail = () => {
   }
 
   const info = book.volumeInfo;
-
+ 
   return (
     <div className="detail-container">
       <button className="back-button" onClick={() => navigate(-1)}>
