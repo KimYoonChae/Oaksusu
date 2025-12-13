@@ -3,7 +3,7 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 // import "./Detail.css";   // 필요하면 추후 스타일 입히기
 
 const Detail = () => {
-  const { id } = useParams();               // /book/:id 에서 id 가져오기 (필요할 수 있으니, 일단 넣어둠)
+  //const { id } = useParams();               // /book/:id 에서 id 가져오기 (필요할 수 있으니, 일단 넣어둠)
   const location = useLocation();
   const navigate = useNavigate();
   const book = location.state?.book;
@@ -19,7 +19,7 @@ const Detail = () => {
   }
 
   const info = book.volumeInfo;
-
+ 
   return (
     <div className="detail-container">
       <button className="back-button" onClick={() => navigate(-1)}>
