@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation, useParams, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 // import "./Detail.css";   // 필요하면 추후 스타일 입히기
 
 const Detail = () => {
