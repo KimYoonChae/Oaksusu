@@ -1,14 +1,13 @@
-
 import { useLocation, useNavigate } from "react-router-dom";
-// import "./Detail.css";   // 필요하면 추후 스타일 입히기
+import "./Detail.css";   // 스타일 파일 import
 
 const Detail = () => {
-  //const { id } = useParams();               // /book/:id 에서 id 가져오기 (필요할 수 있으니, 일단 넣어둠)
   const location = useLocation();
   const navigate = useNavigate();
   const book = location.state?.book;
 
   // 새로고침하면 state 가 사라질 수 있으니, 그럴 경우 대비한 처리
+  // (MainPage에서 Link state로 book 객체를 받지 못하면 이 메시지가 표시됩니다)
   if (!book) {
     return (
       <div style={{ padding: "2rem" }}>

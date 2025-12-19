@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import axios from "axios";
-import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "../firebase";
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { auth } from "../firebase"; // auth 객체를 import 합니다.
+import { useAuth } from "../contexts/AuthContext";
 import { FcGoogle } from 'react-icons/fc';
-import { useNavigate } from "react-router-dom";
+import { Link} from "react-router-dom";
 import "./Main.css";
 import "../LoginPage/Login.css"; 
 
@@ -46,19 +47,10 @@ const AuthButton = styled.button`
 const Main = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [user, setUser] = useState(null);
+  const { currentUser: user } = useAuth(); // 2. AuthContext에서 사용자 정보를 가져옵니다.
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Firebase의 onAuthStateChanged를 사용하여 로그인 상태를 실시간으로 감지
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe(); // 컴포넌트 언마운트 시 구독 해제
-  }, []);
-
+  
   // 구글 로그인 핸들러
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -105,12 +97,6 @@ const Main = () => {
     }
   };
 
-  // 책 아이템 클릭 시 페이지 이동하는 기능 추가
-  const handleBookClick = (book) => {
-    // book.id 를 URL에 넣고, 상세 정보는 state 로 함께 넘겨주기
-    navigate(`/book/${book.id}`, { state: { book } });
-  };
-
   const handleSearch = (e) => {
     e.preventDefault();
     fetchBooks();
@@ -148,8 +134,12 @@ const Main = () => {
 
       <div className="book-list">
         {searchResults.map((book) => (
-          // onClick 기능 추가: 클릭 시 상세페이지로 이동
-          <div key={book.id} className="book-item" onClick={() => handleBookClick(book)}>
+          // Link 컴포넌트를 사용하여 상세 페이지로 이동
+          <Link
+            key={book.id}
+            to={`/book/${book.id}`}
+            state={{ book }}
+            className="book-item">
             <img
               src={
                 book.volumeInfo.imageLinks?.thumbnail ||
@@ -164,7 +154,7 @@ const Main = () => {
                 {book.volumeInfo.authors?.join(", ")}
               </p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
