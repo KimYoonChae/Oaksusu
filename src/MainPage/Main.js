@@ -1,58 +1,358 @@
-import React, {useEffect, useState, useRef} from "react";
+import React, { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import "./Main.css";
-import "../LoginPage/Login.css";
+
+const Container = styled.div`
+  min-height: 100vh;
+  background: #f8f9fa;
+`;
 
 const Header = styled.header`
-  display: inline-flex;
+  position: sticky;
+  top: 0;
+  background: white;
+  border-bottom: 1px solid #e5e5e5;
+  z-index: 100;
+`;
+
+const TopBar = styled.div`
+  display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 1rem 0;
-  margin-bottom: 1rem;
+  padding: 16px 24px;
+  max-width: 1400px;
+  margin: 0 auto;
 `;
 
-const PageTitle = styled.h1`
-  flex-grow: 1;
-  text-align: center;
-  margin: 0;
-  transform: translateX(-50px);
+const Logo = styled.div`
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  cursor: pointer;
 `;
 
-const AuthButton = styled.button`
-  display: inline-flex;
-  padding: 8px 12px;
-  justify-content: center;
+const NavMenu = styled.nav`
+  display: flex;
+  gap: 32px;
   align-items: center;
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const NavItem = styled.a`
+  font-size: 15px;
+  color: #666;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 500;
+  
+  &:hover {
+    color: #333;
+  }
+`;
+
+const RightSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`;
+
+const IconButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+  
+  &:hover {
+    color: #333;
+  }
+`;
+
+const LogoutButton = styled.button`
+  padding: 8px 16px;
+  background: #789043;
+  color: white;
+  border: none;
   border-radius: 6px;
-  border: 1px solid #2f83f3;
-  background-color: white;
-  color: #2f83f3;
-  font-size: 1rem;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-
+  
   &:hover {
-    background: #f5f8ff;
+    background: #555;
   }
+`;
+
+const TabBar = styled.div`
+  display: flex;
+  gap: 32px;
+  padding: 0 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  border-bottom: 1px solid #e5e5e5;
+`;
+
+const Tab = styled.button`
+  background: none;
+  border: none;
+  padding: 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: ${props => props.$active ? '#333' : '#999'};
+  cursor: pointer;
+  border-bottom: 2px solid ${props => props.$active ? '#333' : 'transparent'};
+  
+  &:hover {
+    color: #333;
+  }
+`;
+
+const MainContent = styled.main`
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+`;
+
+const Banner = styled.div`
+  position: relative;
+  background: linear-gradient(135deg, #5E7332 0%, #8b7355 100%);
+  border-radius: 16px;
+  padding: 60px;
+  margin-bottom: 40px;
+  overflow: hidden;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  @media (max-width: 768px) {
+    padding: 40px 24px;
+    min-height: 300px;
+  }
+`;
+
+const BannerText = styled.div`
+  color: white;
+  max-width: 500px;
+  z-index: 1;
+`;
+
+const BannerTitle = styled.h2`
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+  
+  @media (max-width: 768px) {
+    font-size: 28px;
+  }
+`;
+
+const BannerSubtitle = styled.p`
+  font-size: 18px;
+  margin: 0;
+  opacity: 0.95;
+`;
+
+const BannerBooks = styled.div`
+  position: relative;
+  display: flex;
+  gap: 20px;
+  z-index: 1;
+  
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const BookCover3D = styled.div`
+  width: 160px;
+  height: 220px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transform: rotateY(-15deg) translateZ(20px);
+  transition: transform 0.3s;
+  
+  &:hover {
+    transform: rotateY(-5deg) translateZ(30px);
+  }
+`;
+
+const SearchSection = styled.div`
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  margin-bottom: 40px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+`;
+
+const SearchTitle = styled.h3`
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+`;
+
+const SearchForm = styled.form`
+  display: flex;
+  gap: 12px;
+`;
+
+const SearchInput = styled.input`
+  flex: 1;
+  padding: 14px 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px;
+  
+  &:focus {
+    outline: none;
+    border-color: #333;
+  }
+`;
+
+const SearchButton = styled.button`
+  padding: 14px 32px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  
+  &:hover {
+    background: #555;
+  }
+  
+  &:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+  }
+`;
+
+const CategorySection = styled.div`
+  margin-bottom: 40px;
+`;
+
+const CategoryGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+`;
+
+const CategoryItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 16px;
+  border-radius: 12px;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: white;
+  }
+`;
+
+const CategoryIcon = styled.div`
+  width: 64px;
+  height: 64px;
+  background: ${props => props.$color || '#fff'};
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+`;
+
+const CategoryLabel = styled.span`
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 24px 0;
+  color: #333;
+`;
+
+const BookGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 24px;
+`;
+
+const BookCard = styled(Link)`
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: translateY(-4px);
+  }
+`;
+
+const BookCoverWrapper = styled.div`
+  position: relative;
+  aspect-ratio: 3/4;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+`;
+
+const BookCoverImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const BookTitle = styled.h4`
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+`;
+
+const BookAuthor = styled.p`
+  font-size: 13px;
+  color: #999;
+  margin: 0;
+`;
+
+const ErrorMessage = styled.p`
+  color: #ff4444;
+  text-align: center;
+  padding: 20px;
 `;
 
 const Main = () => {
   const { currentUser: user } = useAuth();
-
   const location = useLocation();
   const navigate = useNavigate();
 
-  // URL에 검색어(q)를 저장해서 뒤로가도 유지
   const [searchParams, setSearchParams] = useSearchParams();
   const q = searchParams.get("q") || "";
 
-  // input은 URL q를 기준으로 유지
   const [searchQuery, setSearchQuery] = useState(q);
   const [searchResults, setSearchResults] = useState([]);
 
@@ -61,22 +361,27 @@ const Main = () => {
 
   const isFirstLoad = useRef(true);
 
-  // URL(q)이 바뀌면 input도 동기화
+  const categories = [
+    { icon: "📚", label: "러브로맨스", color: "#FFE5E5" },
+    { icon: "🎭", label: "디즈니", color: "#E5F3FF" },
+    { icon: "📖", label: "오늘의한문장", color: "#FFF5E5" },
+    { icon: "🎨", label: "이벤트", color: "#FFE5F3" },
+    { icon: "✨", label: "숨은꿀템", color: "#F5E5FF" },
+    { icon: "📢", label: "공개예정", color: "#E5FFEF" },
+    { icon: "🆕", label: "새로들어온책", color: "#FFE5E5" },
+    { icon: "📦", label: "서점베스트", color: "#E5F3FF" },
+  ];
+
   useEffect(() => {
-    // 페이지 첫 로드때는 무시한다. 
     if (isFirstLoad.current) {
       isFirstLoad.current = false;
-  
-      // URL에 q가 있으면 제거 → 검색 초기화
       if (searchParams.get("q")) {
         setSearchParams({});
         setSearchResults([]);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 실제 API 호출 함수: 매개변수로 query를 받도록 변경한다.
   const fetchBooks = async (query) => {
     if (!query) {
       setSearchResults([]);
@@ -108,7 +413,6 @@ const Main = () => {
       return;
     }
     fetchBooks(q);
-
   }, [q]);
 
   const handleSearch = (e) => {
@@ -116,12 +420,12 @@ const Main = () => {
     const trimmed = searchQuery.trim();
 
     if (!trimmed) {
-      setSearchParams({}); 
+      setSearchParams({});
       setSearchResults([]);
       return;
     }
 
-    setSearchParams({ q: trimmed }); 
+    setSearchParams({ q: trimmed });
   };
 
   const handleLogout = async () => {
@@ -134,71 +438,106 @@ const Main = () => {
   };
 
   return (
-    <div className="main-container">
+    <Container>
       <Header>
-        <PageTitle>도서 검색</PageTitle>
-
-        {/* AI 추천 페이지 이동 버튼 */}
-        <AuthButton
-          onClick={() => navigate("/recommand")}
-          style={{ marginRight: "8px" }}
-        >
-          AI 도서 추천
-        </AuthButton>
-
-        {/* 북마크 목록 이동 버튼 (로그인했을 때만 보여도 되고, 항상 보이기도 한다.) */}
-        <AuthButton
-          onClick={() => navigate("/bookmarks")}
-          style={{ marginRight: "8px" }}
-        >
-          내 북마크
-        </AuthButton>
-
-        <AuthButton onClick={handleLogout}>로그아웃</AuthButton>
+        <TopBar>
+          <Logo>오.도.독</Logo>
+          
+          <RightSection>
+            <IconButton onClick={() => navigate("/bookmarks")}>북마크</IconButton>
+            <IconButton onClick={() => navigate("/recommand")}>AI발견</IconButton>
+            <LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
+          </RightSection>
+        </TopBar>
+        
+        <TabBar>
+          <Tab $active>NOW</Tab>
+          <Tab>커뮤니티</Tab>
+          <Tab>오디오북</Tab>
+          <Tab>⚡오늘의 감상</Tab>
+          <Tab>오도독 플레이스</Tab>
+        </TabBar>
       </Header>
 
-      <form onSubmit={handleSearch} className="search-form">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="책 제목, 저자 등을 입력하세요."
-          className="search-input"
-        />
-        <button type="submit" className="search-button" disabled={loading}>
-          {loading ? "검색 중..." : "검색"}
-        </button>
-      </form>
+      <MainContent>
+        <Banner>
+          <BannerText>
+            <BannerTitle>
+              이 책 왜 띵작?<br />
+              오독 트렌드로 요약
+            </BannerTitle>
+            <BannerSubtitle>11월 오.도.독 회원 PICK</BannerSubtitle>
+          </BannerText>
+          
+          <BannerBooks>
+            <BookCover3D style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }} />
+            <BookCover3D style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }} />
+            <BookCover3D style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }} />
+          </BannerBooks>
+        </Banner>
 
-      {error && <p className="error-message">{error}</p>}
-
-      <div className="book-list">
-        {searchResults.map((book) => (
-          <Link
-            key={book.id}
-            to={`/book/${book.id}`}
-            // from: location을 같이 넘겨서 Detail에서 뒤로가기 안정화
-            state={{ book, from: location }}
-            className="book-item"
-          >
-            <img
-              src={
-                book.volumeInfo.imageLinks?.thumbnail ||
-                "https://via.placeholder.com/128x192?text=No+Image"
-              }
-              alt={book.volumeInfo.title}
-              className="book-cover"
+        <SearchSection>
+          <SearchTitle>지금 바로 읽어보세요</SearchTitle>
+          <SearchForm onSubmit={handleSearch}>
+            <SearchInput
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="책 제목, 저자 등을 입력하세요"
             />
-            <div className="book-info">
-              <h3 className="book-title">{book.volumeInfo.title}</h3>
-              <p className="book-author">
-                {book.volumeInfo.authors?.join(", ")}
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
+            <SearchButton type="submit" disabled={loading}>
+              {loading ? "검색 중..." : "검색"}
+            </SearchButton>
+          </SearchForm>
+        </SearchSection>
+
+        {!q && (
+          <CategorySection>
+            <CategoryGrid>
+              {categories.map((category, index) => (
+                <CategoryItem key={index}>
+                  <CategoryIcon $color={category.color}>
+                    {category.icon}
+                  </CategoryIcon>
+                  <CategoryLabel>{category.label}</CategoryLabel>
+                </CategoryItem>
+              ))}
+            </CategoryGrid>
+          </CategorySection>
+        )}
+
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+
+        {searchResults.length > 0 && (
+          <>
+            <SectionTitle>검색 결과 ({searchResults.length}권)</SectionTitle>
+            <BookGrid>
+              {searchResults.map((book) => (
+                <BookCard
+                  key={book.id}
+                  to={`/book/${book.id}`}
+                  state={{ book, from: location }}
+                >
+                  <BookCoverWrapper>
+                    <BookCoverImage
+                      src={
+                        book.volumeInfo.imageLinks?.thumbnail ||
+                        "https://placehold.co/160x240?text=No+Image"
+                      }
+                      alt={book.volumeInfo.title}
+                    />
+                  </BookCoverWrapper>
+                  <BookTitle>{book.volumeInfo.title}</BookTitle>
+                  <BookAuthor>
+                    {book.volumeInfo.authors?.join(", ") || "저자 미상"}
+                  </BookAuthor>
+                </BookCard>
+              ))}
+            </BookGrid>
+          </>
+        )}
+      </MainContent>
+    </Container>
   );
 };
 

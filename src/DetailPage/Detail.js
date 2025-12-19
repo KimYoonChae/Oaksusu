@@ -1,8 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Detail.css";
 
-import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "./AuthContext";
+import { useEffect, useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 import { getBookId, isBookmarked, toggleBookmark } from "../services/bookmarkService";
 
@@ -11,21 +11,13 @@ const Detail = () => {
   const navigate = useNavigate();
   const book = location.state?.book;
 
-  const { user, loading } = useContext(AuthContext);
+  const { currentUser: user, loading } = useAuth();
   const uid = user?.uid;
 
   const [bookmarked, setBookmarked] = useState(false);
   const [bmLoading, setBmLoading] = useState(false);
 
   const bookId = getBookId(book);
-
-  const from = location.state?.from;
-   
-  <button
-    className="back-button"
-    onClick={() => (from ? navigate(-1) : navigate("/"))}
-  >← 뒤로가기
-  </button>
 
   useEffect(() => {
     if (!uid || !bookId) return;
