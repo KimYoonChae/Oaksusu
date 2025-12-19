@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 
 import { db } from "../firebase";
-import { AuthContext } from "../DetailPage/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 
 const Bookmark = () => {
     const navigate = useNavigate();
-    const { user, loading } = useContext(AuthContext);
-
+    const { currentUser: user } = useAuth();
+    
     const [items, setItems] = useState([]);
     const [err, setErr] = useState("");
 
@@ -36,21 +36,6 @@ const Bookmark = () => {
 
         return () => unsub();
     }, [user]);
-
-    // 로그인 상태 확인중
-    if (loading) {
-        return <div style={{ padding: "2rem" }}>로그인 상태 확인 중...</div>;
-    }
-
-    // 로그인 안한 경우
-    if (!user) {
-        return (
-        <div style={{ padding: "2rem" }}>
-            <p>로그인이 필요합니다.</p>
-            <button onClick={() => navigate("/login")}>로그인 하러가기</button>
-        </div>
-        );
-    }
 
     return (
         <div style={{ padding: "1.5rem" }}>

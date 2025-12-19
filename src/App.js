@@ -1,5 +1,5 @@
-import { Routes, Route } from "react-router-dom";
-import LoginPage from "./LoginPage/Login";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import LoginPage from "./LoginPage/LoginPage";
 import MainPage from "./MainPage/Main";
 import Detail from "./DetailPage/Detail";
 
@@ -7,21 +7,49 @@ import RecommandPage from "../src/RecommandPage/Recommand";
 
 import "./App.css";
 import Bookmark from "./BookmarkPage/Bookmark";
-
-import { AuthProvider } from "./DetailPage/AuthContext";
+import ProtectedRoute from "./ProtectedRoute";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
   return (
     <AuthProvider>
-      <div className="App">
+      <BrowserRouter>
         <Routes>
-          <Route path="/book/:id" element={<Detail />} />
-          <Route path="/bookmarks" element={<Bookmark />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/recommand" element={<RecommandPage />} />
-          <Route path="/" element={<MainPage />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <MainPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/book/:id"
+            element={
+              <ProtectedRoute>
+                <Detail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookmarks"
+            element={
+              <ProtectedRoute>
+                <Bookmark />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recommand"
+            element={
+              <ProtectedRoute>
+                <RecommandPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-      </div>
+      </BrowserRouter>
     </AuthProvider>
   );
 }

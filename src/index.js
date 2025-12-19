@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
 import App from './App';
@@ -16,9 +15,7 @@ root.render(
     {/* 2. QueryClientProvider로 앱 전체를 감싸줍니다. */}
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter>
           <App />
-        </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>

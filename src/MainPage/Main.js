@@ -1,10 +1,9 @@
 import React, {useEffect, useState, useRef} from "react";
 import styled from "styled-components";
 import axios from "axios";
-import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useAuth } from "../contexts/AuthContext";
-import { FcGoogle } from "react-icons/fc";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import "./Main.css";
 import "../LoginPage/Login.css";
@@ -125,17 +124,6 @@ const Main = () => {
     setSearchParams({ q: trimmed }); 
   };
 
-  // 구글 로그인 핸들러
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      console.log("로그인 성공:", result.user);
-    } catch (error) {
-      console.error("로그인 중 오류 발생:", error);
-    }
-  };
-
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -166,14 +154,7 @@ const Main = () => {
           내 북마크
         </AuthButton>
 
-        {user ? (
-          <AuthButton onClick={handleLogout}>로그아웃</AuthButton>
-        ) : (
-          <button onClick={handleGoogleLogin} className="google-login-button">
-            <FcGoogle className="google-icon" />
-            <span>Google로 로그인</span>
-          </button>
-        )}
+        <AuthButton onClick={handleLogout}>로그아웃</AuthButton>
       </Header>
 
       <form onSubmit={handleSearch} className="search-form">
