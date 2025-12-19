@@ -150,6 +150,14 @@ const Main = () => {
       <Header>
         <PageTitle>도서 검색</PageTitle>
 
+        {/* AI 추천 페이지 이동 버튼 */}
+        <AuthButton
+          onClick={() => navigate("/recommand")}
+          style={{ marginRight: "8px" }}
+        >
+          AI 도서 추천
+        </AuthButton>
+
         {/* 북마크 목록 이동 버튼 (로그인했을 때만 보여도 되고, 항상 보이기도 한다.) */}
         <AuthButton
           onClick={() => navigate("/bookmarks")}
