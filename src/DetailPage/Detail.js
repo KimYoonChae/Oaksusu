@@ -9,8 +9,8 @@ import {
   getBookId,
   isBookmarked,
   toggleBookmark,
-  getBookmarkMemo,     
-  saveBookmarkMemo,   
+  getBookmarkMemo,
+  saveBookmarkMemo,
 } from "../services/bookmarkService";
 
 const Detail = () => {
@@ -18,12 +18,10 @@ const Detail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const book = location.state?.book; // 검색 페이지에서 넘어온 도서 정보
+  const book = location.state?.book;
 
+  // AuthContext는 useAuth 하나만 사용(중복 제거한 부분 !!)
   const { currentUser: user, loading } = useAuth();
-
-  // 로그인 정보
-  const { user, loading } = useContext(AuthContext);
   const uid = user?.uid;
 
   // 북마크 상태
@@ -34,10 +32,10 @@ const Detail = () => {
   const [detailBook, setDetailBook] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  // 북마크된 도서 ID
+  // book이 없으면 URL param id로 bookId 결정
   const bookId = getBookId(book) || id;
 
-  // 메모 상태 관리 
+  // 메모 상태
   const [memo, setMemo] = useState("");
   const [memoSaving, setMemoSaving] = useState(false);
 
@@ -46,8 +44,12 @@ const Detail = () => {
     if (!uid || !bookId) return;
 
     const checkBookmark = async () => {
-      const exists = await isBookmarked(uid, bookId);
-      setBookmarked(exists);
+      try {
+        const exists = await isBookmarked(uid, bookId);
+        setBookmarked(exists);
+      } catch (e) {
+        console.error("북마크 상태 확인 실패", e);
+      }
     };
 
     checkBookmark();
@@ -79,7 +81,7 @@ const Detail = () => {
 
     const run = async () => {
       if (!bookmarked) {
-        setMemo(""); // 북마크 해제되면 메모 입력도 초기화
+        setMemo("");
         return;
       }
       try {
@@ -93,7 +95,7 @@ const Detail = () => {
     run();
   }, [uid, bookId, bookmarked]);
 
-  // 로딩/로그인 가드
+  // 로딩 상태 처리
   if (loading) {
     return <div style={{ padding: "2rem" }}>로그인 상태 확인 중...</div>;
   }
@@ -122,10 +124,10 @@ const Detail = () => {
 
   const displayBook = detailBook || book;
 
-  // 북마크 토글
   const onToggleBookmark = async () => {
     if (!uid || !bookId) return;
 
+    // book이 없으면 detailBook을 저장 대상으로 사용
     const bookForSave = book || detailBook;
     if (!bookForSave) {
       alert("북마크할 책 정보가 없습니다.");
@@ -136,6 +138,9 @@ const Detail = () => {
     try {
       const now = await toggleBookmark(uid, bookForSave);
       setBookmarked(now);
+
+      // 북마크 해제되면 메모 초기화
+      if (!now) setMemo("");
     } catch (e) {
       console.error(e);
       alert("북마크 처리 중 오류가 발생했습니다.");
@@ -144,7 +149,7 @@ const Detail = () => {
     }
   };
 
-  // 메모 저장
+  // 메모 저장(북마크된 도서에 한해)
   const onSaveMemo = async () => {
     if (!uid || !bookId) return;
 
@@ -169,7 +174,7 @@ const Detail = () => {
     }
   };
 
-  // 도서 설명에서 html 태그 제거
+  // 도서 설명 html 태그 제거
   const plainDescription = (displayBook?.volumeInfo?.description || "")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/p>/gi, "\n\n")
