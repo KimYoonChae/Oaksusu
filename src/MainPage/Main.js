@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, {useEffect, useState, useRef} from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { auth } from "../firebase"; // auth 객체를 import 합니다.
+import { auth } from "../firebase";
 import { useAuth } from "../contexts/AuthContext";
-import { FcGoogle } from 'react-icons/fc';
-import { Link} from "react-router-dom";
+import { FcGoogle } from "react-icons/fc";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import "./Main.css";
-import "../LoginPage/Login.css"; 
+import "../LoginPage/Login.css";
 
 const Header = styled.header`
   display: inline-flex;
@@ -22,7 +22,6 @@ const PageTitle = styled.h1`
   flex-grow: 1;
   text-align: center;
   margin: 0;
-  /* 버튼 공간을 확보하기 위해 약간 왼쪽으로 이동 */
   transform: translateX(-50px);
 `;
 
@@ -45,37 +44,42 @@ const AuthButton = styled.button`
 `;
 
 const Main = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const { currentUser: user } = useAuth();
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // URL에 검색어(q)를 저장해서 뒤로가도 유지
+  const [searchParams, setSearchParams] = useSearchParams();
+  const q = searchParams.get("q") || "";
+
+  // input은 URL q를 기준으로 유지
+  const [searchQuery, setSearchQuery] = useState(q);
   const [searchResults, setSearchResults] = useState([]);
-  const { currentUser: user } = useAuth(); // 2. AuthContext에서 사용자 정보를 가져옵니다.
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const isFirstLoad = useRef(true);
+
+  // URL(q)이 바뀌면 input도 동기화
+  useEffect(() => {
+    // 페이지 첫 로드때는 무시한다. 
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
   
-  // 구글 로그인 핸들러
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      // 로그인 성공 시 사용자 정보는 onAuthStateChanged 리스너를 통해 자동으로 업데이트됩니다.
-      // 성공 후 MainPage에 머무르게 됩니다.
-      console.log('로그인 성공:', result.user);
-    } catch (error) {
-      console.error('로그인 중 오류 발생:', error);
+      // URL에 q가 있으면 제거 → 검색 초기화
+      if (searchParams.get("q")) {
+        setSearchParams({});
+        setSearchResults([]);
+      }
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      console.log("로그아웃 성공");
-      // 로그아웃 후 별도 페이지 이동이 필요하다면 여기에 navigate('/login') 추가
-    } catch (error) {
-      console.error("로그아웃 중 오류 발생:", error);
-    }
-  };
-
-  const fetchBooks = async () => {
-    if (!searchQuery) {
+  // 실제 API 호출 함수: 매개변수로 query를 받도록 변경한다.
+  const fetchBooks = async (query) => {
+    if (!query) {
       setSearchResults([]);
       return;
     }
@@ -86,7 +90,9 @@ const Main = () => {
     try {
       const apiKey = process.env.REACT_APP_GOOGLE_BOOKS_API_KEY;
       const response = await axios.get(
-        `https://www.googleapis.com/books/v1/volumes?q=${searchQuery}&maxResults=20&key=${apiKey}`
+        `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(
+          query
+        )}&maxResults=20&key=${apiKey}`
       );
       setSearchResults(response.data.items || []);
     } catch (err) {
@@ -97,26 +103,71 @@ const Main = () => {
     }
   };
 
+  useEffect(() => {
+    if (!q) {
+      setSearchResults([]);
+      return;
+    }
+    fetchBooks(q);
+
+  }, [q]);
+
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchBooks();
+    const trimmed = searchQuery.trim();
+
+    if (!trimmed) {
+      setSearchParams({}); 
+      setSearchResults([]);
+      return;
+    }
+
+    setSearchParams({ q: trimmed }); 
+  };
+
+  // 구글 로그인 핸들러
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      console.log("로그인 성공:", result.user);
+    } catch (error) {
+      console.error("로그인 중 오류 발생:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      console.log("로그아웃 성공");
+    } catch (error) {
+      console.error("로그아웃 중 오류 발생:", error);
+    }
   };
 
   return (
     <div className="main-container">
       <Header>
         <PageTitle>도서 검색</PageTitle>
+
+        {/* 북마크 목록 이동 버튼 (로그인했을 때만 보여도 되고, 항상 보이기도 한다.) */}
+        <AuthButton
+          onClick={() => navigate("/bookmarks")}
+          style={{ marginRight: "8px" }}
+        >
+          내 북마크
+        </AuthButton>
+
         {user ? (
-          // 로그인된 경우: 로그아웃 버튼 표시
           <AuthButton onClick={handleLogout}>로그아웃</AuthButton>
         ) : (
-          // 로그인되지 않은 경우: Google 로그인 버튼 바로 표시
           <button onClick={handleGoogleLogin} className="google-login-button">
             <FcGoogle className="google-icon" />
             <span>Google로 로그인</span>
           </button>
         )}
       </Header>
+
       <form onSubmit={handleSearch} className="search-form">
         <input
           type="text"
@@ -134,12 +185,13 @@ const Main = () => {
 
       <div className="book-list">
         {searchResults.map((book) => (
-          // Link 컴포넌트를 사용하여 상세 페이지로 이동
           <Link
             key={book.id}
             to={`/book/${book.id}`}
-            state={{ book }}
-            className="book-item">
+            // from: location을 같이 넘겨서 Detail에서 뒤로가기 안정화
+            state={{ book, from: location }}
+            className="book-item"
+          >
             <img
               src={
                 book.volumeInfo.imageLinks?.thumbnail ||

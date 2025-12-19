@@ -1,13 +1,56 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import "./Detail.css";   // 스타일 파일 import
+import "./Detail.css";
+
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "./AuthContext";
+
+import { getBookId, isBookmarked, toggleBookmark } from "../services/bookmarkService";
 
 const Detail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const book = location.state?.book;
 
-  // 새로고침하면 state 가 사라질 수 있으니, 그럴 경우 대비한 처리
-  // (MainPage에서 Link state로 book 객체를 받지 못하면 이 메시지가 표시됩니다)
+  const { user, loading } = useContext(AuthContext);
+  const uid = user?.uid;
+
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bmLoading, setBmLoading] = useState(false);
+
+  const bookId = getBookId(book);
+
+  const from = location.state?.from;
+  
+  <button
+    className="back-button"
+    onClick={() => (from ? navigate(-1) : navigate("/"))}
+  >← 뒤로가기
+  </button>
+
+  useEffect(() => {
+    if (!uid || !bookId) return;
+
+    const run = async () => {
+      const exists = await isBookmarked(uid, bookId);
+      setBookmarked(exists);
+    };
+
+    run();
+  }, [uid, bookId]);
+
+  if (loading) {
+    return <div style={{ padding: "2rem" }}>로그인 상태 확인 중...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div style={{ padding: "2rem" }}>
+        <p>로그인이 필요합니다.</p>
+        <button onClick={() => navigate("/login")}>로그인 하러가기</button>
+      </div>
+    );
+  }
+
   if (!book) {
     return (
       <div style={{ padding: "2rem" }}>
@@ -17,10 +60,29 @@ const Detail = () => {
     );
   }
 
+  const onToggleBookmark = async () => {
+    if (!uid || !bookId) return;
+
+    setBmLoading(true);
+    try {
+      const now = await toggleBookmark(uid, book);
+      setBookmarked(now);
+    } catch (e) {
+      console.error(e);
+      alert("북마크 처리 중 오류가 발생했습니다.");
+    } finally {
+      setBmLoading(false);
+    }
+  };
+
   return (
-    <div className="detail-container"> 
+    <div className="detail-container">
       <button className="back-button" onClick={() => navigate(-1)}>
         ← 뒤로가기
+      </button>
+
+      <button onClick={onToggleBookmark} disabled={bmLoading}>
+        {bookmarked ? "★ 북마크 해제" : "☆ 북마크 추가"}
       </button>
 
       <div className="detail-content">
@@ -32,19 +94,11 @@ const Detail = () => {
           alt={book.volumeInfo.title}
           className="detail-cover"
         />
+
         <div className="detail-info">
           <h1 className="detail-title">{book.volumeInfo.title}</h1>
           {book.volumeInfo.authors && (
-            <p className="detail-author">저자: {book.volumeInfo.authors.join(", ")}</p>
-          )}
-          {book.volumeInfo.publishedDate && (
-            <p className="detail-published">출판일: {book.volumeInfo.publishedDate}</p>
-          )}
-          {book.volumeInfo.publisher && (
-            <p className="detail-publisher">출판사: {book.volumeInfo.publisher}</p>
-          )}
-          {book.volumeInfo.description && (
-            <p className="detail-description">{book.volumeInfo.description}</p>
+            <p>저자: {book.volumeInfo.authors.join(", ")}</p>
           )}
         </div>
       </div>
