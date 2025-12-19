@@ -2,8 +2,8 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "./Detail.css";
 
-import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "./AuthContext";
+import { useEffect, useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 import {
   getBookId,
@@ -20,8 +20,9 @@ const Detail = () => {
 
   const book = location.state?.book; // 검색 페이지에서 넘어온 도서 정보
 
-  // 로그인 정보
-  const { user, loading } = useContext(AuthContext);
+
+  const { currentUser: user, loading } = useAuth();
+
   const uid = user?.uid;
 
   // 북마크 상태
@@ -38,6 +39,9 @@ const Detail = () => {
   // 메모 상태 관리 
   const [memo, setMemo] = useState("");
   const [memoSaving, setMemoSaving] = useState(false);
+
+  // firestore에 저장할 때 사용할 도서 ID
+  const bookId = getBookId(book);
 
   // 북마크 상태 확인
   useEffect(() => {

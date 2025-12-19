@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 
@@ -76,10 +76,7 @@ const Bookmark = () => {
                 }}
                 >
                 <img
-                    src={
-                    b.thumbnail_url ||
-                    "https://via.placeholder.com/80x120?text=No+Image"
-                    }
+                    src={ b.thumbnail_url || "https://placehold.co/80x120?text=No+Image" }
                     alt={b.book_title}
                     style={{
                     width: 80,
