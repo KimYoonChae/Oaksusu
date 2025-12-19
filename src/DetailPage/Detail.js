@@ -20,7 +20,7 @@ const Detail = () => {
   const bookId = getBookId(book);
 
   const from = location.state?.from;
-  
+   
   <button
     className="back-button"
     onClick={() => (from ? navigate(-1) : navigate("/"))}
