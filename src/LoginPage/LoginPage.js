@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GoogleAuthProvider, signInWithRedirect, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { useAuth } from "../contexts/AuthContext";
-import { FcGoogle } from "react-icons/fc";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -148,32 +147,6 @@ const Divider = styled.div`
   }
 `;
 
-const GoogleButton = styled.button`
-  width: 100%;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: #f8f8f8;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  svg {
-    font-size: 20px;
-  }
-`;
-
 const Links = styled.div`
   display: flex;
   justify-content: space-between;
@@ -278,18 +251,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    setError("");
-    
-    try {
-      await signInWithRedirect(auth, provider);
-    } catch (error) {
-      console.error("Google 로그인 리디렉션 중 오류 발생:", error);
-      setError("Google 로그인 중 오류가 발생했습니다.");
-    }
-  };
-
   return (
     <Container>
       <LeftSection>
@@ -342,13 +303,6 @@ const LoginPage = () => {
           }}>
             {isSignUp ? "이미 계정이 있으신가요? 로그인" : "계정이 없으신가요? 회원가입"}
           </ToggleButton>
-
-          <Divider>또는</Divider>
-
-          <GoogleButton onClick={handleGoogleLogin}>
-            <FcGoogle />
-            <span>Google로 로그인</span>
-          </GoogleButton>
 
           <Links>
             <div>

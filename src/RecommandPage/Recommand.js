@@ -1,26 +1,36 @@
 import React, { useState, useRef, useEffect } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import "./Recommand.css";
+
+const PageContainer = styled.div`
+  background: linear-gradient(180deg, #f8f9fa 0%, #f1f8e9 100%);
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
 
 const ChatContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 120px);
+  width: 100%;
   max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-  background: #f5f5f5;
-  border-radius: 12px;
+  height: calc(100vh - 40px);
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(30, 80, 30, 0.08);
+  overflow: hidden;
 `;
 
 const Header = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 0;
-  margin-bottom: 1rem;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e9f0e9;
+  flex-shrink: 0;
 `;
 
 const PageTitle = styled.h1`
@@ -31,25 +41,22 @@ const PageTitle = styled.h1`
 
 const BackButton = styled(Link)`
   padding: 8px 16px;
-  background-color: #4285f4;
+  background-color: #789043;
   color: white;
   text-decoration: none;
   border-radius: 6px;
   font-size: 0.9rem;
-  transition: background-color 0.2s;
+  transition: background-color 0.3s;
 
   &:hover {
-    background-color: #357ae8;
+    background-color: #5e7332;
   }
 `;
 
 const MessagesContainer = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -65,7 +72,7 @@ const MessagesContainer = styled.div`
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #888;
+    background: #cdd2d9;
     border-radius: 10px;
   }
 
@@ -83,21 +90,24 @@ const MessageBubble = styled.div`
 
 const MessageContent = styled.div`
   max-width: 70%;
-  padding: 12px 16px;
-  border-radius: 18px;
-  background-color: ${props => props.$isUser ? '#4285f4' : '#e8e8e8'};
-  color: ${props => props.$isUser ? 'white' : '#333'};
+  padding: 14px 20px;
+  border-radius: 20px;
+  background-color: ${props => props.$isUser ? '#789043' : '#f1f3f5'};
+  color: ${props => props.$isUser ? 'white' : '#212529'};
   word-wrap: break-word;
   white-space: pre-wrap;
   line-height: 1.5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-top-left-radius: ${props => props.$isUser ? '20px' : '4px'};
+  border-top-right-radius: ${props => props.$isUser ? '4px' : '20px'};
 `;
 
 const Avatar = styled.div`
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: ${props => props.$isUser ? '#4285f4' : '#e8e8e8'};
-  display: flex;
+  background-color: ${props => props.$isUser ? '#789043' : '#e8e8e8'};
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
@@ -108,37 +118,37 @@ const Avatar = styled.div`
 const InputContainer = styled.form`
   display: flex;
   gap: 10px;
-  padding: 10px;
-  background: white;
-  border-radius: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid #e9f0e9;
+  background: #f8f9fa;
 `;
 
 const MessageInput = styled.input`
   flex: 1;
   padding: 12px 16px;
-  border: 1px solid #ddd;
-  border-radius: 24px;
+  border: 1px solid #e1e4e8;
+  border-radius: 20px;
   font-size: 1rem;
   outline: none;
 
   &:focus {
-    border-color: #4285f4;
+    border-color: #789043;
   }
 `;
 
 const SendButton = styled.button`
   padding: 12px 24px;
-  background-color: #4285f4;
+  background-color: #789043;
   color: white;
   border: none;
-  border-radius: 24px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 1rem;
   font-weight: 600;
   transition: background-color 0.2s;
 
   &:hover:not(:disabled) {
-    background-color: #357ae8;
+    background-color: #5e7332;
   }
 
   &:disabled {
@@ -147,12 +157,32 @@ const SendButton = styled.button`
   }
 `;
 
+const typing = keyframes`
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+`;
+
 const LoadingIndicator = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #666;
-  font-size: 0.9rem;
+  gap: 5px;
+  
+  span {
+    width: 8px;
+    height: 8px;
+    background-color: #adb5bd;
+    border-radius: 50%;
+    animation: ${typing} 1s infinite ease-in-out;
+  }
+
+  span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
 `;
 
 const Recommand = () => {
@@ -258,13 +288,12 @@ const Recommand = () => {
   };
 
   return (
-    <div className="recommand-container">
-      <Header>
-        <PageTitle>AI 도서 추천 챗봇</PageTitle>
-        <BackButton to="/">홈으로</BackButton>
-      </Header>
-
+    <PageContainer>
       <ChatContainer>
+        <Header>
+          <PageTitle>AI 도서 추천 챗봇</PageTitle>
+          <BackButton to="/">홈으로</BackButton>
+        </Header>
         <MessagesContainer>
           {messages.map((message, index) => (
             <MessageBubble key={index} $isUser={message.role === "user"}>
@@ -284,7 +313,11 @@ const Recommand = () => {
             <MessageBubble $isUser={false}>
               <Avatar $isUser={false}>AI</Avatar>
               <MessageContent $isUser={false}>
-                <LoadingIndicator>답변을 생성하고 있습니다...</LoadingIndicator>
+                <LoadingIndicator>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </LoadingIndicator>
               </MessageContent>
             </MessageBubble>
           )}
@@ -326,9 +359,8 @@ const Recommand = () => {
           </SendButton>
         </InputContainer>
       </ChatContainer>
-    </div>
+    </PageContainer>
   );
 };
 
 export default Recommand;
-

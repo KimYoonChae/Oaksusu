@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, getRedirectResult } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase'; // firebase.js에서 auth 객체 가져오기
 
 const AuthContext = createContext();
@@ -19,17 +19,6 @@ export function AuthProvider({ children }) {
       setLoading(false); // Firebase가 초기화되지 않았으면 로딩 종료
       return;
     }
-
-    // 리디렉션 후 로그인 결과 처리
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result) {
-          console.log("Redirect login successful:", result.user);
-        }
-      })
-      .catch((error) => {
-        console.error("Error getting redirect result:", error);
-      });
 
     // Firebase의 인증 상태 변경을 실시간으로 감지하고, 초기 로딩 상태를 설정합니다.
     const unsubscribe = onAuthStateChanged(auth, (user) => {
