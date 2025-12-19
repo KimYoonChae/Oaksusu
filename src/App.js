@@ -2,6 +2,7 @@ import {Routes, Route } from "react-router-dom";
 import LoginPage from '../src/LoginPage/Login'
 import MainPage from '../src/MainPage/Main'; 
 import Detail from "../src/DetailPage/Detail"; // 1. Detail 컴포넌트를 import 합니다.
+import RecommandPage from "../src/RecommandPage/Recommand";
 import './App.css';
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
           {/* 2. /book/:id 동적 경로로 수정합니다. */}
           <Route path="/book/:id" element={<Detail />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/recommand" element={<RecommandPage />} />
           <Route path="/" element={<MainPage />} />
         </Routes>
     </div>

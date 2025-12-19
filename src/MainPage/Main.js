@@ -5,7 +5,7 @@ import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { auth } from "../firebase"; // auth 객체를 import 합니다.
 import { useAuth } from "../contexts/AuthContext";
 import { FcGoogle } from 'react-icons/fc';
-import { Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./Main.css";
 import "../LoginPage/Login.css"; 
 
@@ -106,16 +106,29 @@ const Main = () => {
     <div className="main-container">
       <Header>
         <PageTitle>도서 검색</PageTitle>
-        {user ? (
-          // 로그인된 경우: 로그아웃 버튼 표시
-          <AuthButton onClick={handleLogout}>로그아웃</AuthButton>
-        ) : (
-          // 로그인되지 않은 경우: Google 로그인 버튼 바로 표시
-          <button onClick={handleGoogleLogin} className="google-login-button">
-            <FcGoogle className="google-icon" />
-            <span>Google로 로그인</span>
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <Link to="/recommand" style={{ 
+            padding: '8px 16px', 
+            backgroundColor: '#ff6f61', 
+            color: 'white', 
+            textDecoration: 'none', 
+            borderRadius: '6px',
+            fontSize: '0.9rem',
+            fontWeight: '600'
+          }}>
+            AI 챗봇 추천
+          </Link>
+          {user ? (
+            // 로그인된 경우: 로그아웃 버튼 표시
+            <AuthButton onClick={handleLogout}>로그아웃</AuthButton>
+          ) : (
+            // 로그인되지 않은 경우: Google 로그인 버튼 바로 표시
+            <button onClick={handleGoogleLogin} className="google-login-button">
+              <FcGoogle className="google-icon" />
+              <span>Google로 로그인</span>
+            </button>
+          )}
+        </div>
       </Header>
       <form onSubmit={handleSearch} className="search-form">
         <input
