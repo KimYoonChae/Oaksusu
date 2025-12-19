@@ -89,3 +89,17 @@
 .book-item {
   cursor: pointer;
 }
+.recommend-button {
+  padding: 10px 15px;
+  border: none;
+  background-color: #ff6f61; /* 추천 버튼 색상 */
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.recommend-button:hover {
+  background-color: #e65a50;
+}
