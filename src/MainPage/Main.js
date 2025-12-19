@@ -35,27 +35,7 @@ const Logo = styled.div`
   cursor: pointer;
 `;
 
-const NavMenu = styled.nav`
-  display: flex;
-  gap: 32px;
-  align-items: center;
-  
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
 
-const NavItem = styled.a`
-  font-size: 15px;
-  color: #666;
-  text-decoration: none;
-  cursor: pointer;
-  font-weight: 500;
-  
-  &:hover {
-    color: #333;
-  }
-`;
 
 const RightSection = styled.div`
   display: flex;
@@ -346,7 +326,7 @@ const ErrorMessage = styled.p`
 `;
 
 const Main = () => {
-  const { currentUser: user } = useAuth();
+  useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 

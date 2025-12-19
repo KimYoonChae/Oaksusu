@@ -8,7 +8,8 @@ import RecommandPage from "../src/RecommandPage/Recommand";
 import "./App.css";
 import Bookmark from "./BookmarkPage/Bookmark";
 import ProtectedRoute from "./ProtectedRoute";
-import { AuthProvider } from "./DetailPage/AuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
+
 
 function App() {
   return (
