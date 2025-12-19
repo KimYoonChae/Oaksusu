@@ -360,7 +360,7 @@ const Main = () => {
         setSearchResults([]);
       }
     }
-  }, []);
+  }, [searchParams, setSearchParams]);
 
   const fetchBooks = async (query) => {
     if (!query) {
