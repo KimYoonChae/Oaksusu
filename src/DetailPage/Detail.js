@@ -64,7 +64,11 @@ const Detail = () => {
         const res = await axios.get(
           `https://www.googleapis.com/books/v1/volumes/${id}?key=${apiKey}`
         );
-        setDetailBook(res.data);
+        const bookData = res.data;
+        if (bookData.volumeInfo.imageLinks?.thumbnail) {
+          bookData.volumeInfo.imageLinks.thumbnail = bookData.volumeInfo.imageLinks.thumbnail.replace(/^http:/, 'https:');
+        }
+        setDetailBook(bookData);
       } catch (e) {
         console.error("도서 상세 정보 로딩 실패", e);
       } finally {

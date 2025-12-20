@@ -5,7 +5,8 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-
+import { ReactComponent as BookStackIcon } from "./logo.svg";
+import Workmodal from "./Workmodal";
 const Container = styled.div`
   min-height: 100vh;
   background: #f8f9fa;
@@ -102,7 +103,7 @@ const MainContent = styled.main`
 
 const Banner = styled.div`
   position: relative;
-  background: linear-gradient(135deg, #5E7332 0%, #8b7355 100%);
+  background: linear-gradient(135deg, #D2D6A2 0%, #5FA143 100%);
   border-radius: 16px;
   padding: 60px;
   margin-bottom: 40px;
@@ -142,27 +143,15 @@ const BannerSubtitle = styled.p`
 `;
 
 const BannerBooks = styled.div`
-  position: relative;
-  display: flex;
-  gap: 20px;
+  position: absolute;
+  right: 80px; /* 오른쪽에서의 거리 (값을 키우면 왼쪽으로 이동) */
+  bottom: 130px;   /* 아래쪽에서의 거리 (값을 키우면 위로 이동) */
   z-index: 1;
   
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
-
-const BookCover3D = styled.div`
-  width: 160px;
-  height: 220px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  transform: rotateY(-15deg) translateZ(20px);
-  transition: transform 0.3s;
-  
-  &:hover {
-    transform: rotateY(-5deg) translateZ(30px);
+  /* 아이콘 크기 조절 */
+  svg {
+    width: 250px; /* 원하는 너비로 수정 */
+    height: auto; /* 높이는 비율에 맞게 자동 조절 */
   }
 `;
 
@@ -335,21 +324,23 @@ const Main = () => {
 
   const [searchQuery, setSearchQuery] = useState(q);
   const [searchResults, setSearchResults] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const isFirstLoad = useRef(true);
 
   const categories = [
-    { icon: "📚", label: "러브로맨스", color: "#FFE5E5" },
-    { icon: "🎭", label: "디즈니", color: "#E5F3FF" },
-    { icon: "📖", label: "오늘의한문장", color: "#FFF5E5" },
-    { icon: "🎨", label: "이벤트", color: "#FFE5F3" },
-    { icon: "✨", label: "숨은꿀템", color: "#F5E5FF" },
-    { icon: "📢", label: "공개예정", color: "#E5FFEF" },
-    { icon: "🆕", label: "새로들어온책", color: "#FFE5E5" },
-    { icon: "📦", label: "서점베스트", color: "#E5F3FF" },
+    { icon: "📚", label: "소설", query: "subject:fiction", color: "#FFE5E5" },
+    { icon: "🎭", label: "에세이", query: "subject:essay", color: "#E5F3FF" },
+    { icon: "📖", label: "인문학", query: "subject:humanities", color: "#FFF5E5" },
+    { icon: "🎨", label: "예술", query: "subject:art", color: "#FFE5F3" },
+    { icon: "✨", label: "자기계발", query: "subject:self-help", color: "#F5E5FF" },
+    { icon: "📢", label: "경제경영", query: "subject:business", color: "#E5FFEF" },
+    { icon: "🆕", label: "과학", query: "subject:science", color: "#FFE5E5" },
+    { icon: "📦", label: "역사", query: "subject:history", color: "#E5F3FF" },
   ];
 
   useEffect(() => {
@@ -360,7 +351,7 @@ const Main = () => {
         setSearchResults([]);
       }
     }
-  }, []);
+  }, [searchParams, setSearchParams]);
 
   const fetchBooks = async (query) => {
     if (!query) {
@@ -378,7 +369,14 @@ const Main = () => {
           query
         )}&maxResults=20&key=${apiKey}`
       );
-      setSearchResults(response.data.items || []);
+      const items = response.data.items || [];
+      const processedItems = items.map(item => {
+        if (item.volumeInfo.imageLinks?.thumbnail) {
+          item.volumeInfo.imageLinks.thumbnail = item.volumeInfo.imageLinks.thumbnail.replace(/^http:/, 'https:');
+        }
+        return item;
+      });
+      setSearchResults(processedItems);
     } catch (err) {
       console.error("책 정보를 가져오는 데 실패했습니다.", err);
       setError("책 정보를 가져오는 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -402,10 +400,22 @@ const Main = () => {
     if (!trimmed) {
       setSearchParams({});
       setSearchResults([]);
+      setSelectedCategory(null);
       return;
     }
 
     setSearchParams({ q: trimmed });
+    setSelectedCategory(null); // 검색 시 선택된 카테고리 초기화
+  };
+
+  const handleCategoryClick = (categoryLabel) => {
+    const category = categories.find(c => c.label === categoryLabel);
+    if (category) {
+      setSelectedCategory(categoryLabel);
+      setSearchQuery(""); // 검색어 초기화
+      setSearchParams({}); // URL 파라미터 초기화
+      fetchBooks(category.query);
+    }
   };
 
   const handleLogout = async () => {
@@ -415,6 +425,10 @@ const Main = () => {
     } catch (error) {
       console.error("로그아웃 중 오류 발생:", error);
     }
+  };
+
+  const handleTabClick = () => {
+    setShowModal(true);
   };
 
   return (
@@ -432,10 +446,10 @@ const Main = () => {
         
         <TabBar>
           <Tab $active>NOW</Tab>
-          <Tab>커뮤니티</Tab>
-          <Tab>오디오북</Tab>
-          <Tab>⚡오늘의 감상</Tab>
-          <Tab>오도독 플레이스</Tab>
+          <Tab onClick={handleTabClick}>커뮤니티</Tab>
+          <Tab onClick={handleTabClick}>오디오북</Tab>
+          <Tab onClick={handleTabClick}>⚡오늘의 감상</Tab>
+          <Tab onClick={handleTabClick}>오도독 플레이스</Tab>
         </TabBar>
       </Header>
 
@@ -450,9 +464,7 @@ const Main = () => {
           </BannerText>
           
           <BannerBooks>
-            <BookCover3D style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }} />
-            <BookCover3D style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }} />
-            <BookCover3D style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }} />
+            <BookStackIcon/>
           </BannerBooks>
         </Banner>
 
@@ -471,26 +483,24 @@ const Main = () => {
           </SearchForm>
         </SearchSection>
 
-        {!q && (
-          <CategorySection>
-            <CategoryGrid>
-              {categories.map((category, index) => (
-                <CategoryItem key={index}>
-                  <CategoryIcon $color={category.color}>
-                    {category.icon}
-                  </CategoryIcon>
-                  <CategoryLabel>{category.label}</CategoryLabel>
-                </CategoryItem>
-              ))}
-            </CategoryGrid>
-          </CategorySection>
-        )}
+        <CategorySection>
+          <CategoryGrid>
+            {categories.map((category, index) => (
+              <CategoryItem key={index} onClick={() => handleCategoryClick(category.label)}>
+                <CategoryIcon $color={category.color}>
+                  {category.icon}
+                </CategoryIcon>
+                <CategoryLabel>{category.label}</CategoryLabel>
+              </CategoryItem>
+            ))}
+          </CategoryGrid>
+        </CategorySection>
 
         {error && <ErrorMessage>{error}</ErrorMessage>}
 
         {searchResults.length > 0 && (
           <>
-            <SectionTitle>검색 결과 ({searchResults.length}권)</SectionTitle>
+            <SectionTitle>{selectedCategory ? `${selectedCategory} 추천 도서` : `검색 결과 (${searchResults.length}권)`}</SectionTitle>
             <BookGrid>
               {searchResults.map((book) => (
                 <BookCard
@@ -517,6 +527,10 @@ const Main = () => {
           </>
         )}
       </MainContent>
+
+      {showModal && (
+        <Workmodal onClose={() => setShowModal(false)} />
+      )}
     </Container>
   );
 };

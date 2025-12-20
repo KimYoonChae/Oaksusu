@@ -102,7 +102,7 @@ const Input = styled.input`
 const LoginButton = styled.button`
   width: 100%;
   height: 48px;
-  background: #ffe500;
+  background: #789043;
   border: none;
   border-radius: 8px;
   font-size: 16px;
@@ -113,37 +113,13 @@ const LoginButton = styled.button`
   transition: background 0.2s;
 
   &:hover:not(:disabled) {
-    background: #ffd400;
+    background: #617830;
   }
 
   &:disabled {
     background: #f0f0f0;
     color: #aaa;
     cursor: not-allowed;
-  }
-`;
-
-const Divider = styled.div`
-  display: flex;
-  align-items: center;
-  margin: 32px 0;
-  color: #aaa;
-  font-size: 14px;
-
-  &::before,
-  &::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #ddd;
-  }
-
-  &::before {
-    margin-right: 16px;
-  }
-
-  &::after {
-    margin-left: 16px;
   }
 `;
 

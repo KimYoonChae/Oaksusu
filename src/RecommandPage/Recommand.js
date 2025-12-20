@@ -61,7 +61,6 @@ const MessagesContainer = styled.div`
   flex-direction: column;
   gap: 16px;
 
-  /* 스크롤바 스타일링 */
   &::-webkit-scrollbar {
     width: 8px;
   }
@@ -157,6 +156,95 @@ const SendButton = styled.button`
   }
 `;
 
+const SuggestionsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 24px 16px;
+  justify-content: center;
+`;
+
+const SuggestionButton = styled.button`
+  padding: 8px 16px;
+  background-color: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  border-radius: 18px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+
+  &:hover:not(:disabled) {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+    transform: translateY(-2px);
+  }
+`;
+
+const RecommendationContainer = styled.div`
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 10px 24px 10px 64px;
+  margin-top: -8px;
+  margin-bottom: 8px;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #dee2e6;
+    border-radius: 4px;
+  }
+`;
+
+const RecommendedBookCard = styled(Link)`
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 140px;
+  flex-shrink: 0;
+  transition: transform 0.2s, box-shadow 0.2s;
+  background: #fff;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  }
+`;
+
+const RecommendedBookCover = styled.img`
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  background-color: #f8f9fa;
+`;
+
+const RecommendedBookInfo = styled.div`
+  padding: 12px;
+`;
+
+const RecommendedBookTitle = styled.h4`
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const RecommendedBookAuthor = styled.p`
+  font-size: 0.8rem;
+  color: #868e96;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
 const typing = keyframes`
   0% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
@@ -195,86 +283,109 @@ const Recommand = () => {
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const messagesEndRef = useRef(null);
   const { currentUser: user } = useAuth();
 
-  // 메시지가 추가될 때마다 스크롤을 맨 아래로
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // src/RecommandPage/Recommand.js에서 sendMessage 함수 부분만 수정
+
+const sendMessage = async (content) => {
+  const messageContent = content.trim();
+  if (!messageContent || loading) return;
+
+  const userMessage = {
+    role: "user",
+    content: messageContent,
+  };
+
+  setMessages(prev => [...prev, userMessage]);
+  setLoading(true);
+  setError(null);
+
+  try {
+    // Vercel Serverless Function 엔드포인트
+    const functionUrl = '/api/getBookRecommendations';
     
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        messages: [...messages, userMessage].map((msg) => ({
+          role: msg.role,
+          content: msg.content
+        }))
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'AI 응답을 받는 데 실패했습니다.');
+    }
+
+    const data = await response.json();
+    
+    // 책 추천이 있는 경우
+    if (data.books && Array.isArray(data.books) && data.books.length > 0) {
+      // 책 데이터 정제
+      const cleanedBooks = data.books.map(book => ({
+        id: book.id || `book-${Date.now()}-${Math.random()}`,
+        title: book.title || "제목 없음",
+        authors: Array.isArray(book.authors) ? book.authors : (book.authors ? [book.authors] : ["저자 미상"]),
+        coverUrl: book.coverUrl || "https://via.placeholder.com/140x180?text=No+Image"
+      }));
+
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        type: "book-recommendation",
+        books: cleanedBooks,
+        content: data.message || "이런 책들은 어떠세요? 📚"
+      }]);
+    } else {
+      // 일반 텍스트 응답
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: data.message || "죄송합니다, 추천할 만한 책을 찾지 못했어요."
+      }]);
+    }
+
+  } catch (err) {
+    console.error("책 추천을 받는 데 실패했습니다.", err);
+    
+    let errorMessage = "오류가 발생했습니다. 다시 시도해주세요.";
+    
+    if (err.message.includes('Failed to fetch') || err.message.includes('404')) {
+      errorMessage = "서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.";
+    }
+    
+    setError(errorMessage);
+    
+    setMessages(prev => [...prev, {
+      role: "assistant",
+      content: "죄송합니다. " + errorMessage
+    }]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
     if (!inputValue.trim() || loading) return;
 
-    const userMessage = {
-      role: "user",
-      content: inputValue.trim()
-    };
-
-    // 사용자 메시지 추가
-    setMessages(prev => [...prev, userMessage]);
+    setShowSuggestions(false);
+    sendMessage(inputValue);
     setInputValue("");
-    setLoading(true);
-    setError(null);
+  };
 
-    try {
-      // 대화 히스토리를 포함하여 API 호출
-      // 로컬 개발 환경에서는 netlify dev를 사용하거나, 직접 함수를 호출할 수 있도록 설정
-      const functionUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://localhost:8888/.netlify/functions/getBookRecommendations'
-        : '/.netlify/functions/getBookRecommendations';
-      
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          messages: [...messages, userMessage].map(msg => ({
-            role: msg.role,
-            content: msg.content
-          }))
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'AI 응답을 받는 데 실패했습니다.');
-      }
-
-      const data = await response.json();
-      
-      // AI 응답 추가
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: data.message
-      }]);
-    } catch (err) {
-      console.error("책 추천을 받는 데 실패했습니다.", err);
-      
-      let errorMessage = "오류가 발생했습니다. 다시 시도해주세요.";
-      
-      // 네트워크 오류 또는 404 오류인 경우
-      if (err.message.includes('Failed to fetch') || err.message.includes('404')) {
-        errorMessage = "Netlify 함수를 찾을 수 없습니다. 개발 환경에서는 'netlify dev' 명령어를 사용하여 서버를 실행하세요.";
-        console.warn("💡 개발 환경에서 Netlify 함수를 사용하려면:");
-        console.warn("   1. 터미널에서 'npm install -g netlify-cli' 실행");
-        console.warn("   2. 'netlify dev' 명령어로 서버 시작");
-        console.warn("   3. 또는 프로덕션 빌드 후 'netlify deploy' 사용");
-      }
-      
-      setError(errorMessage);
-      
-      // 에러 메시지 추가
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: "죄송합니다. 오류가 발생했습니다. " + errorMessage
-      }]);
-    } finally {
-      setLoading(false);
-    }
+  const handleSuggestionClick = (prompt) => {
+    setShowSuggestions(false);
+    sendMessage(prompt);
   };
 
   const handleReset = () => {
@@ -285,6 +396,7 @@ const Recommand = () => {
       }
     ]);
     setError(null);
+    setShowSuggestions(true);
   };
 
   return (
@@ -294,21 +406,85 @@ const Recommand = () => {
           <PageTitle>AI 도서 추천 챗봇</PageTitle>
           <BackButton to="/">홈으로</BackButton>
         </Header>
+        
         <MessagesContainer>
           {messages.map((message, index) => (
-            <MessageBubble key={index} $isUser={message.role === "user"}>
-              {message.role !== "user" && (
-                <Avatar $isUser={false}>AI</Avatar>
+            <React.Fragment key={index}>
+              <MessageBubble $isUser={message.role === "user"}>
+                {message.role !== "user" && (
+                  <Avatar $isUser={false}>AI</Avatar>
+                )}
+                <MessageContent $isUser={message.role === "user"}>
+                  {message.content}
+                </MessageContent>
+                {message.role === "user" && (
+                  <Avatar $isUser={true}>{user?.displayName?.[0] || "U"}</Avatar>
+                )}
+              </MessageBubble>
+              
+              {/* 책 추천 카드 */}
+              {message.type === 'book-recommendation' && message.books && (
+                <RecommendationContainer>
+                  {message.books.map((book, bookIndex) => (
+                    <RecommendedBookCard 
+                      key={book.id || bookIndex}
+                      to={`/book/${book.id}`}
+                      state={{ 
+                        book: { 
+                          id: book.id, 
+                          volumeInfo: { 
+                            title: book.title, 
+                            authors: book.authors, 
+                            imageLinks: { 
+                              thumbnail: book.coverUrl 
+                            } 
+                          } 
+                        }
+                      }}
+                    >
+                      <RecommendedBookCover
+                        src={book.coverUrl}
+                        alt={book.title}
+                        onError={(e) => {
+                          // 이미지 로드 실패 시 기본 이미지로 대체
+                          e.target.onerror = null;
+                          e.target.src = "https://via.placeholder.com/140x180?text=No+Image";
+                        }}
+                      />
+                      <RecommendedBookInfo>
+                        <RecommendedBookTitle title={book.title}>
+                          {book.title}
+                        </RecommendedBookTitle>
+                        <RecommendedBookAuthor title={book.authors?.join(', ')}>
+                          {book.authors?.join(', ')}
+                        </RecommendedBookAuthor>
+                      </RecommendedBookInfo>
+                    </RecommendedBookCard>
+                  ))}
+                </RecommendationContainer>
               )}
-              <MessageContent $isUser={message.role === "user"}>
-                {message.content}
-              </MessageContent>
-              {message.role === "user" && (
-                <Avatar $isUser={true}>{user?.displayName?.[0] || "U"}</Avatar>
-              )}
-            </MessageBubble>
+            </React.Fragment>
           ))}
           
+          {showSuggestions && (
+            <SuggestionsContainer>
+              {[
+                "요즘 인기 있는 소설 추천해줘",
+                "스트레스 해소에 좋은 책은?",
+                "30대 여성이 읽을 만한 자기계발서",
+                "판타지 소설 좋아하는데, 뭐 볼까?",
+              ].map((prompt, index) => (
+                <SuggestionButton 
+                  key={index} 
+                  onClick={() => handleSuggestionClick(prompt)} 
+                  disabled={loading}
+                >
+                  {prompt}
+                </SuggestionButton>
+              ))}
+            </SuggestionsContainer>
+          )}
+
           {loading && (
             <MessageBubble $isUser={false}>
               <Avatar $isUser={false}>AI</Avatar>
@@ -327,11 +503,9 @@ const Recommand = () => {
 
         {error && (
           <div style={{ 
-            padding: "10px", 
+            padding: "10px 24px", 
             background: "#ffebee", 
             color: "#c62828", 
-            borderRadius: "8px",
-            marginBottom: "10px",
             fontSize: "0.9rem"
           }}>
             {error}
