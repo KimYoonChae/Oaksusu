@@ -144,14 +144,13 @@ const BannerSubtitle = styled.p`
 
 const BannerBooks = styled.div`
   position: absolute;
-  right: 80px; /* 오른쪽에서의 거리 (값을 키우면 왼쪽으로 이동) */
-  bottom: 80px;   /* 아래쪽에서의 거리 (값을 키우면 위로 이동) */
+  right: 80px;
+  bottom: 80px;
   z-index: 1;
   
-  /* 아이콘 크기 조절 */
   svg {
-    width: 250px; /* 원하는 너비로 수정 */
-    height: auto; /* 높이는 비율에 맞게 자동 조절 */
+    width: 250px;
+    height: auto;
   }
 `;
 
@@ -364,10 +363,7 @@ const Main = () => {
 
     try {
       let apiQuery = query;
-      // 사용자가 특정 필드를 지정하여 검색할 수 있도록 쿼리 파싱
-      // 예: "intitle:저속노화 inauthor:정희원"
       if (!query.includes(':')) {
-        // 특정 필드 지정이 없으면, 제목, 저자, 출판사, 설명 등에서 포괄적으로 검색
         apiQuery = `${query}`;
       }
 
@@ -413,15 +409,15 @@ const Main = () => {
     }
 
     setSearchParams({ q: trimmed });
-    setSelectedCategory(null); // 검색 시 선택된 카테고리 초기화
+    setSelectedCategory(null);
   };
 
   const handleCategoryClick = (categoryLabel) => {
     const category = categories.find(c => c.label === categoryLabel);
     if (category) {
       setSelectedCategory(categoryLabel);
-      setSearchQuery(""); // 검색어 초기화
-      setSearchParams({}); // URL 파라미터 초기화
+      setSearchQuery("");
+      setSearchParams({});
       fetchBooks(category.query);
     }
   };

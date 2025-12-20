@@ -29,30 +29,23 @@ const Detail = () => {
 
   const book = location.state?.book;
 
-  // AuthContext는 useAuth만 사용
   const { currentUser: user, loading } = useAuth();
   const uid = user?.uid;
 
-  // 북마크 상태
   const [bookmarked, setBookmarked] = useState(false);
   const [bmLoading, setBmLoading] = useState(false);
 
-  // 도서 상세 정보
   const [detailBook, setDetailBook] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  // book이 없으면 URL param id로 bookId 결정
   const bookId = getBookId(book) || id;
 
-  // 메모 상태
   const [memo, setMemo] = useState("");
   const [memoSaving, setMemoSaving] = useState(false);
 
-  // 읽기 상태
   const [status, setStatus] = useState("todo");
   const [statusSaving, setStatusSaving] = useState(false);
 
-  // 1) 북마크 상태 확인
   useEffect(() => {
     if (!uid || !bookId) return;
 
@@ -68,7 +61,6 @@ const Detail = () => {
     checkBookmark();
   }, [uid, bookId]);
 
-  // 2) 구글북스 API에서 도서 상세 정보 불러오기
   useEffect(() => {
     const fetchBookDetail = async () => {
       setDetailLoading(true);
@@ -92,7 +84,6 @@ const Detail = () => {
     fetchBookDetail();
   }, [id]);
 
-  // 3) 북마크된 도서만 memo/status 불러오기
   useEffect(() => {
     if (!uid || !bookId) return;
 
@@ -119,7 +110,6 @@ const Detail = () => {
     run();
   }, [uid, bookId, bookmarked]);
 
-  // 로딩 상태 처리
   if (loading) {
     return <div style={{ padding: "2rem" }}>로그인 상태 확인 중...</div>;
   }
@@ -148,11 +138,9 @@ const Detail = () => {
 
   const displayBook = detailBook || book;
 
-  // 북마크 토글
   const onToggleBookmark = async () => {
     if (!uid || !bookId) return;
 
-    // book이 없으면 detailBook을 저장 대상으로 사용
     const bookForSave = book || detailBook;
     if (!bookForSave) {
       alert("북마크할 책 정보가 없습니다.");
@@ -164,7 +152,6 @@ const Detail = () => {
       const now = await toggleBookmark(uid, bookForSave);
       setBookmarked(now);
 
-      // 북마크 해제되면 초기화
       if (!now) {
         setMemo("");
         setStatus("todo");
@@ -177,9 +164,8 @@ const Detail = () => {
     }
   };
 
-  // 읽기 상태 변경 저장 (북마크된 책만)
   const onChangeStatus = async (nextStatus) => {
-    setStatus(nextStatus); //  ui 먼저 반영
+    setStatus(nextStatus);
 
     if (!uid || !bookId) return;
 
@@ -203,7 +189,6 @@ const Detail = () => {
     }
   };
 
-  // 메모 저장(북마크된 도서에 한해)
   const onSaveMemo = async () => {
     if (!uid || !bookId) return;
 
@@ -228,7 +213,6 @@ const Detail = () => {
     }
   };
 
-  // 도서 설명 html 태그 제거
   const plainDescription = (displayBook?.volumeInfo?.description || "")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/p>/gi, "\n\n")
@@ -276,7 +260,6 @@ const Detail = () => {
             <p>출판사: {displayBook.volumeInfo.publisher}</p>
           )}
 
-          {/* 읽기 상태: 북마크된 책에만 */}
           {bookmarked ? (
             <div style={{ marginTop: 16 }}>
               <div style={{ marginBottom: 8, fontWeight: 700, color: "#617830" }}>
@@ -338,14 +321,12 @@ const Detail = () => {
             </div>
           )}
 
-          {/* 도서 세부내용 */}
           {plainDescription && (
             <p className="detail-description" style={{ whiteSpace: "pre-line" }}>
               {plainDescription}
             </p>
           )}
 
-          {/* 메모: 북마크한 책에만 작성 가능 */}
           {bookmarked ? (
             <div style={{ marginTop: "16px" }}>
               <h3 style={{ marginBottom: "8px" }}>메모</h3>

@@ -12,7 +12,6 @@ const requiredEnvVars = {
   appId: process.env.REACT_APP_APP_ID
 };
 
-// 누락된 환경 변수 확인
 const envVarNameMap = {
   apiKey: 'REACT_APP_FIREBASE_API_KEY',
   authDomain: 'REACT_APP_AUTH_DOMAIN',
@@ -50,7 +49,6 @@ const firebaseConfig = {
   appId: requiredEnvVars.appId || "1:971240990566:web:5ac36f8a546e89658ccaa7"
 };
 
-// Firebase 초기화 (환경 변수가 없어도 앱이 크래시되지 않도록)
 let app;
 let auth;
 
@@ -60,7 +58,6 @@ try {
 } catch (error) {
   console.error('❌ Firebase 초기화 실패:', error.message);
   console.error('💡 .env 파일을 확인하고 개발 서버를 재시작하세요.');
-  // 앱이 완전히 크래시되지 않도록 더미 객체 생성
   app = null;
   auth = null;
 }

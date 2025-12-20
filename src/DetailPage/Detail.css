@@ -28,7 +28,6 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* 뒤로가기 버튼 */
 .back-button {
   display: inline-flex;
   align-items: center;
@@ -51,7 +50,6 @@
   color: var(--primary-green);
 }
 
-/* 북마크 버튼 */
 .bookmark-icon-btn {
   background: none;
   border: none;
@@ -74,7 +72,6 @@
   cursor: not-allowed;
 }
 
-/* 메인 컨텐츠 카드 */
 .detail-content {
   max-width: 1000px;
   margin: 0 auto;
@@ -89,7 +86,6 @@
   align-items: start;
 }
 
-/* 책 커버 */
 .detail-cover {
   width: 100%;
   max-width: 260px;
@@ -101,7 +97,6 @@
   display: block;
 }
 
-/* 책 정보 영역 */
 .detail-info {
   min-width: 0;
 }
@@ -124,7 +119,6 @@
   font-weight: 500;
 }
 
-/* 책 설명 박스 */
 .detail-description {
   margin-top: 24px;
   padding: 24px;
@@ -138,7 +132,6 @@
   word-break: keep-all;
 }
 
-/* 메모 섹션 공통 */
 .detail-info > div[style*="marginTop"] {
   margin-top: 24px;
   padding: 28px;
@@ -147,7 +140,6 @@
   border-radius: 12px;
 }
 
-/* 메모 제목 */
 .detail-info h3 {
   margin: 0 0 16px 0;
   font-size: 18px;
@@ -155,7 +147,6 @@
   color: var(--primary-green);
 }
 
-/* 텍스트 영역 */
 .detail-info textarea {
   width: 100%;
   min-height: 150px;
@@ -181,7 +172,6 @@
   color: var(--text-light);
 }
 
-/* 메모 저장 버튼 */
 .detail-info div[style*="marginTop"] button {
   margin-top: 12px;
   padding: 12px 28px;
@@ -206,7 +196,6 @@
   cursor: not-allowed;
 }
 
-/* 북마크 필요 안내 */
 .detail-info > div[style*="color"] {
   padding: 24px !important;
   background: #F5F6F2 !important;
@@ -222,7 +211,6 @@
   font-weight: 700;
 }
 
-/* 로딩/에러 메시지 */
 .detail-container > div[style*="padding: 2rem"] {
   max-width: 600px;
   margin: 80px auto;
@@ -257,7 +245,6 @@
   transform: translateY(-1px);
 }
 
-/* 반응형 디자인 */
 @media (max-width: 900px) {
   .detail-container {
     padding: 24px 16px 60px;
